@@ -138,6 +138,7 @@ pr=uniroot(f = rootf,interval = c(0.3,0.5))$root
 p=seq(0.01,0.99,by=0.001)
 gammastarf=exp(-2*p/(1-p))*1*(p<pr)-(1+(1-p)/(2*p)*(log((1-p)/(2*p))-1))*1*(p>=pr)
 x11(height=5,width=7)
+par(mai = c(0.8, 1, 0.1, 0.1))
 plot(p[1:483],gammastarf[1:483],type="l",lwd=2,xlab=expression(beta),ylab=expression(paste(gamma,"*(X)")),cex.lab=1.3,ylim=c(-1,1),xlim=c(p[1],p[981]),cex.axis=1.3)
 lines(p[484:981],gammastarf[484:981],lwd=2)
 
@@ -588,7 +589,8 @@ gammastar=max(f-fmirror)/max(f)*(c(x1[MS[1]],x2[MS[2]])-mu)/sqrt(sum((c(x1[MS[1]
 
 
 
-### ToS distribution of Abe & Fujisama
+### ToS distribution of Abe & Fujisama ###
+##########################################
 rx <- function(x,lambda){
   if(lambda==0){
     return(x)
@@ -632,11 +634,14 @@ MS <- x[which.max(gamma)]
 Gamma <- max(gamma)
 gammastar <- sign(MS)*Gamma
 
-DBA_AF <- function(x,lambda){
+DBA_AF <- function(x,lambda,dist="SA",delta=1){
   ## function to calculate the skewness function of the ToS proposed in F&A 2015
   ## f(r(x))
   ## x is a n-vector containing the points in which to evaluate the SF
   ## lambda is the scalar skewing parameter
+  ## dist is a character specifying the symmetric reference density, 
+  #   SA for sinh-arcsinh, L for logistic, N for normal
+  ## delta is the skewing parameter of the SA (positive)
   
   # function r(x)
   rx <- function(x,lambda){
@@ -649,22 +654,33 @@ DBA_AF <- function(x,lambda){
     }
   }
   
-  # sinh-arcsinh function as f
-  S <- function(x,lambda){
-    return(sinh(lambda*asinh(x)))
-  }
-  fx <- function(x,lambda){
-    s <- S(x,lambda)
-    f <- abs(lambda)/(2*pi*(1+x^2))*(1+s^2)^(1/2)*exp(-s^2/2)
-    return(f)
-  } 
-  
   # density and mirrored density
-  f <- fx(x = rx(x = x,lambda = lambda),lambda = lambda)
-  fmirror <- fx(x = rx(x = -x,lambda = lambda),lambda = lambda)
+  if(dist=='N'){
+    f <- dnorm(x = rx(x = x,lambda = lambda),mean = 0,sd = 1)
+    fmirror <- dnorm(x = rx(x = -x,lambda = lambda),mean =  0,sd = 1)
+    fm <- dnorm(x = 0,mean =0,sd = 1)
+  } else if(dist=='L'){
+    f <- dlogis(x = rx(x = x,lambda = lambda),location = 0,scale = 1)
+    fmirror <- dlogis(x = rx(x = -x,lambda = lambda),location = 0,scale = 1)
+    fm <- dlogis(x = 0,location = 0,scale = 1)
+  } else {
+    # sinh-arcsinh function as f
+    S <- function(x,delta){
+      return(sinh(delta*asinh(x)))
+    }
+    
+    fx <- function(x,delta){
+      s <- S(x,delta)
+      f <- delta/(2*pi*(1+x^2))*(1+s^2)^(1/2)*exp(-s^2/2)
+      return(f)
+    } 
+    f <- fx(x = rx(x = x,lambda = lambda),delta = delta)
+    fmirror <- fx(x = rx(x = -x,lambda = lambda),delta = delta)
+    fm <- fx(x = 0,delta = delta)
+  }
+
   
   # gamma as a function of s
-  fm <- fx(x = 0,lambda = lambda)
   gamma <- (f-fmirror)/fm
   
   # summarizing measure gamma star
@@ -674,41 +690,68 @@ DBA_AF <- function(x,lambda){
   return(list('f'=f,'fmirror'=fmirror,'gamma'=gamma,'MS'=MS,'Gamma'=Gamma,'gammastar'=gammastar))
 }
 
-n <- 1250
+n <- 2500
 x <- seq(-5,5,length.out=n)
-lambda=seq(-5,5,length.out=n)
-SAF <- lapply(X = lambda,FUN = DBA_AF,x=x)
-gs <- rep(NA,n)
-for(i in 1:n){gs[i] <- SAF[[i]]$gammastar}
+lambda1 <- 0.75
 
-x11()
-par(mai = c(0.8, 1, 0.1, 0.1))
-plot(lambda,gs,type='l',lwd=2,cex.lab=1.3,cex.axis=1.3,xlab = expression(lambda),
-     ylab = expression(paste(gamma,"*(X)")))
+out1 <- DBA_AF(x = x,lambda = lambda1,dist = "L")
 
-lambda2 <- c(-3, -1, 1,3)
-N=length(lambda2)
-SAF2 <- lapply(X = lambda2,FUN = DBA_AF,x=x)
-gs <- rep(NA,N)
-gamma <- matrix(NA,nrow=N,ncol=n)
-f <- matrix(NA,nrow=N,ncol=n)
-for(i in 1:N){
-  gs[i] <- SAF2[[i]]$gammastar
-  gamma[i,] <- SAF2[[i]]$gamma  
-  f[i,] <- SAF2[[i]]$f
+x11(width = 6,height = 3)
+par(mai = c(0.8, 1, 0.3, 0.1))
+plot(x,out1$f,type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylim=c(0,0.3),ylab=expression(f[X](x)),xlab="x")
+lines(x,out1$fmirror,lwd=2,lty=2,col=2)
+
+x11(width = 6,height = 3)
+par(mai = c(0.8, 1, 0.3, 0.1))
+plot(x,out1$gamma,type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylim=c(-1,1),ylab=expression(gamma(s)),xlab="s")
+
+
+lambda2 <- -2
+
+out2 <- DBA_AF(x = x,lambda = lambda2,dist = "L")
+
+x11(width = 6,height = 3)
+par(mai = c(0.8, 1, 0.3, 0.1))
+plot(x,out2$f,type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylim=c(0,0.3),ylab=expression(f[X](x)),xlab="x")
+lines(x,out2$fmirror,lwd=2,lty=2,col=2)
+
+x11(width = 6,height = 3)
+par(mai = c(0.8, 1, 0.3, 0.1))
+plot(x,out2$gamma,type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylim=c(-1,1),ylab=expression(gamma(s)),xlab="s")
+
+### linear combination of ToS
+A <- matrix(c(2,-1.5,0.5,1.5))
+mu <- c(1.25,-2.6)
+lambda <- c(0.75,-2)
+distr <- c("N","L")
+n <- 2000
+
+x1 <- seq(-20,20,length.out=n)
+x2 <- seq(-20,20,length.out=n)
+xgrid <- as.matrix(expand.grid(x1,x2))
+
+f <- function(x,distr,lambda,mu,A){
+  
+  B <- solve(matrix(A,nrow=2,ncol=2))
+  Y <- sweep(x,2,mu)%*%B
+  
+  d1 <- DBA_AF(x = Y[,1],lambda = lambda[1],dist = distr[1])$f
+  d2 <- DBA_AF(x = Y[,2],lambda = lambda[2],dist = distr[2])$f
+  dens <- abs(det(B))*d1*d2
+  return(dens)
 }
-x11()
-par(mai = c(0.8, 1, 0.1, 0.1))
-plot(x,f[1,],type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3)
-lines(x,f[2,],col=2,lty=2,lwd=2)
-lines(x,f[3,],col=4,lty=4,lwd=2)
-lines(x,f[4,],col=5,lty=5,lwd=2)
 
-x11()
+fmat <- matrix(f(x = xgrid,distr = distr,lambda = lambda,mu = mu,A = A),nrow=n,ncol=n)
+fmirror <- matrix(f(x = sweep(x=-xgrid,MARGIN = 2,STATS = 2*mu,FUN = '+'),distr = distr,lambda = lambda,mu = mu,A = A),nrow = n,ncol = n)
+x11(width = 10,height = 10)
 par(mai = c(0.8, 1, 0.1, 0.1))
-plot(x,gamma[1,],type="l",lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylim=c(-1,1))
-lines(x,gamma[2,],col=2,lty=2,lwd=2)
-lines(x,gamma[3,],col=4,lty=4,lwd=2)
-lines(x,gamma[4,],col=5,lty=5,lwd=2)
+contour(x1,x2,fmat,lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylab=expression(x[2]),xlab=expression(x[1]),xlim=c(-15,15),ylim=c(-15,15),labcex = 1)
+contour(x1,x2,fmirror,lwd=2,lty=1,col=4,labcex = 1,add = T)
+points(mu[1],mu[2],col=2,pch=18,cex=2)
 
-gs
+
+fm <- f(x = matrix(mu,nrow=1,ncol=2),distr = distr,lambda = lambda,mu = mu,A = A)
+gamma <- (fmat - fmirror)/fm
+x11(width = 10,height = 10)
+par(mai = c(0.8, 1, 0.1, 0.1))
+contour(x1-mu[1],x2-mu[2],gamma,lwd=2,lty=1,cex.lab=1.3,cex.axis=1.3,ylab=expression(s[2]),xlab=expression(s[1]),xlim = c(-10,10),ylim = c(-10,10),labcex = 1)
