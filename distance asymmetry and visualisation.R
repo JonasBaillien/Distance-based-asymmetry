@@ -348,7 +348,7 @@ plot(alphaseq,mas*difm/abs(difm),type="l")
 
 
 ### exact value of Gamma(X), MS and gamma*(x)
-source('~/PhD/code/multivariate skewness measures/mode gamma.R')
+source('~/mode gamma.R')
 MS=switch(basefunc,"normal"=snorm(alpha=alpha,phi=phi)
                   ,"laplace"=slap(alpha=alpha,phi=phi)
                   ,"logistic"=slog(alpha=alpha,phi=phi)
@@ -362,7 +362,7 @@ gammastar=sign(MS)*GAMMA
 
 
 ### bivariate QBA
-source("densityplot2D.R")
+source("~/densityplot2D.R")
 alpha=c(0.25,0.75)
 mu=c(1.25,-2.6)
 A=matrix(c(2,-1.5,0.5,1.5),nrow=2)
@@ -430,7 +430,7 @@ p2=uniroot(f = func,lower = 0,upper = 10,s2=2,B=B,alpha=alpha)
 ### data example ###
 library(DAAG)
 library(ks)
-source("~/PhD/code/multivariate skewness measures/bivariate asymmetry measure.R")
+source("~/bivariate asymmetry measure (np).R")
 dat=as.matrix(ais[,c(6,9)])
 a=ddAsymmetry2(X = dat,gridpoints = c(500,500),mingrid = c(10,20),maxgrid = c(40,120),plot.contour = T,H.fact = 2)
 X = dat;gridpoints = c(1000,700);mingrid = c(0,0);maxgrid = c(50,120);plot.contour = T;H.fact = 3
@@ -462,7 +462,7 @@ gridM=list(x,y)
 ### bivariate examples from the linear combinations paper
 
 ## example 1
-source("densityplot2D.R")
+source("~/densityplot2D.R")
 alpha=c(0.25,0.65)
 mu=c(20,20)
 A=matrix(c(12,-5,4,8),nrow=2)
