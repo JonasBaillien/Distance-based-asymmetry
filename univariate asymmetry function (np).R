@@ -12,7 +12,7 @@ library(MASS)
 
 
 
-NPasymmetry=function(X,h=NULL,factor=2){
+NPasymmetry <- function(X,h=NULL,factor=2){
   # takes as input 
   # - random sample "X" of size n (numeric vector)
   # - bandwidth "h" (numeric), when NULL, defaults to nrd0 bandwidth
@@ -29,42 +29,42 @@ NPasymmetry=function(X,h=NULL,factor=2){
   
   # setting bandwidth
   if(is.null(h)){
-    h=factor*bw.nrd0(X)
+    h <- factor*bw.nrd0(X)
   }
   
   # KDE of the supplied sample
-  fit=density(x = X,bw = h)
+  fit <- density(x = X,bw = h)
   
   # f(M_X)
-  maxf=max(fit$y)
+  maxf <- max(fit$y)
   
   # M_X
-  indMX=which.max(fit$y)
-  MX=fit$x[indMX]
+  indMX <- which.max(fit$y)
+  MX <- fit$x[indMX]
   
   # creating a grid over which to evaluate the asymmetry function
-  l=length(fit$x)
-  dx=fit$x[2]-fit$x[1]
+  l <- length(fit$x)
+  dx <- fit$x[2]-fit$x[1]
   if(indMX>l/2){
-    x=seq(fit$x[1],fit$x[1]+(2*indMX-2)*dx,by=dx)
-    s=x-MX
-    y=c(fit$y,rep(0,2*indMX-l-1))
-    ymirror=rev(y)
+    x <- seq(fit$x[1],fit$x[1]+(2*indMX-2)*dx,by=dx)
+    s <- x-MX
+    y <- c(fit$y,rep(0,2*indMX-l-1))
+    ymirror <- rev(y)
   } else {
-    x=seq(fit$x[l]-(2*(l-indMX))*dx,fit$x[l],by=dx)
-    s=x-MX
-    y=c(rep(0,l-2*indMX+1),fit$y)
-    ymirror=rev(y)
+    x <- seq(fit$x[l]-(2*(l-indMX))*dx,fit$x[l],by=dx)
+    s <- x-MX
+    y <- c(rep(0,l-2*indMX+1),fit$y)
+    ymirror <- rev(y)
   }
   
   # asymmetry function
-  gamma=(y-ymirror)/maxf
+  gamma <- (y-ymirror)/maxf
   # value of asymmetry function at its mode
-  Gamma=max(gamma)
+  Gamma <- max(gamma)
   # mode of asymmetry function
-  MS=s[which.max(gamma)]
+  MS <- s[which.max(gamma)]
   # summarizing asymmetry measure
-  gammastar=sign(MS)*Gamma
+  gammastar <- sign(MS)*Gamma
   
   return(list("xgrid"=x,"kde"=y,"MX"=MX,"fMX"=maxf,"s"=s,"gamma"=gamma,
               "MS"=MS,"Gamma"=Gamma,"gammastar"=gammastar))
