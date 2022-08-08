@@ -1,0 +1,30 @@
+### plots for the density of linear combinations of QBA-r.vs. ###
+#################################################################
+
+### function for the density in a matrix x (n observations in the rows, d columns)
+densityf <- function(x,basefunc,alpha,mu,A,tpars){
+  # x: nxd-matrix containing observations in the rows
+  # basefunc: d-character vector of reference densities
+  #           Options: "t", "normal", "laplace", "logistic"  
+  # alpha: d-vector of skewing parameters in (0,1)
+  # mu: d-vector with location parameter mu_a
+  # A: dxd-mixing matrix
+  # tpars: d-vector of degrees of freedom for Student's t-reference densities
+  
+  
+  d <- length(alpha)
+  B <- solve(matrix(A,nrow=d))
+  Y <- sweep(x,2,mu)%*%B
+  
+  dens <- abs(det(B))
+  
+  for(i in 1:d){
+    dens <- dens*switch(basefunc[i],
+                     "normal"=QBAsyDist::dAND(y = Y[,i],mu = 0,phi = 1,alpha = alpha[i]),
+                     "laplace"=QBAsyDist::dALaD(y = Y[,i],mu = 0,phi = 1,alpha = alpha[i]),
+                     "logistic"=QBAsyDist::dALoD(y = Y[,i],mu = 0,phi = 1,alpha = alpha[i]),
+                     "t"=QBAsyDist::dATD(y = Y[,i],mu = 0,phi = 1,alpha = alpha[i],nu = tpars[i])
+    )
+  }
+  return(dens)
+}
