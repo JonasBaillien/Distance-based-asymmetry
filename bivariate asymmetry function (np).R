@@ -12,38 +12,38 @@ library(ks)
 ### help function used in the main function ###
 ###############################################
 
-# rotate matrix A 90° clockwise
-rotR=function(A){return( t(apply(A,2,rev)) )}
+# rotate matrix A 90Â° clockwise
+rotR <- function(A){return( t(apply(A,2,rev)) )}
 
-# rotate matrix A 90° counterclockwise
-rotL=function(A){return( apply(t(A),2,rev) )}
+# rotate matrix A 90Â° counterclockwise
+rotL <- function(A){return( apply(t(A),2,rev) )}
 
 # transpose matrix A over antidiagonal (not used)
-mirrorAD=function(A){return( rotL(t(rotR(A))) )}
+mirrorAD <- function(A){return( rotL(t(rotR(A))) )}
 
-# extend 2 partially overlapping grids to fully overlap eachother
-newgrid=function(grid1,grid2,indM){
+# extend 2 partially overlapping grids to fully overlap each other
+newgrid <- function(grid1,grid2,indM){
   # grid1 is list containing grid point locations (d vectors) of original data
   # grid2 is list containing grid point locations (d vectors) of mirrored data
   # indM is the index of the mode of the data
-  n=unlist(lapply(grid1,length))
-  d=length(grid1)
+  n <- unlist(lapply(grid1,length))
+  d <- length(grid1)
   
   # list containing the joint grid
-  newgrid=list()
+  newgrid <- list()
   # indicator whether original grid is extended to the right or left
-  indD=rep(NA,d)
+  indD <- rep(NA,d)
   
   # extending
   for(i in 1:2){
-    x=grid1[[i]]
-    y=grid2[[i]]
+    x <- grid1[[i]]
+    y <- grid2[[i]]
     if(indM[i]>n[i]/2){
-      newgrid[[i]]=c(x,y[(which(y>max(x))[1]):n[i]])
-      indD[i]="R"
+      newgrid[[i]] <- c(x,y[(which(y>max(x))[1]):n[i]])
+      indD[i] <- "R"
     } else {
-      newgrid[[i]]=c(y[1:(which(y>min(x))[1]-2)],x)
-      indD[i]="L"
+      newgrid[[i]] <- c(y[1:(which(y>min(x))[1]-2)],x)
+      indD[i] <- "L"
     }
   }
   
@@ -54,7 +54,7 @@ newgrid=function(grid1,grid2,indM){
 ### main function ###
 #####################
 
-ddAsymmetry2=function(X,gridpoints=c(1000,1000),mingrid=NULL,maxgrid=NULL,plot.contour=F,H.fact=2){
+ddAsymmetry2 <- function(X,gridpoints=c(1000,1000),mingrid=NULL,maxgrid=NULL,plot.contour=F,H.fact=2){
   # X: a nx2 matrix containing the observations
   # gridpoints: numeric vector of length 2 containing the number of grid points to consider in the 2 dimensions
   # mingrid: numeric vector of length 2 containing the lower bounds for the grid
@@ -65,80 +65,80 @@ ddAsymmetry2=function(X,gridpoints=c(1000,1000),mingrid=NULL,maxgrid=NULL,plot.c
   
   # if no grid limits are supplied, they are taken to be the range of the data +-2 times the standard deviation
   if(is.null(mingrid) | is.null(maxgrid)){
-    varX=var(X)
-    minX=apply(X,2,min)
-    maxX=apply(X,2,max)
+    varX <- var(X)
+    minX <- apply(X,2,min)
+    maxX <- apply(X,2,max)
   }
   if(is.null(mingrid)){
-    mingrid=minX-2*sqrt(diag(varX))
+    mingrid <- minX-2*sqrt(diag(varX))
   }
   if(is.null(maxgrid)){
-    maxgrid=maxX+2*sqrt(diag(varX))
+    maxgrid <- maxX+2*sqrt(diag(varX))
   }
   
   
   # plug-in bandwidth
-  H=Hpi(X)
+  H <- Hpi(X)
   # kernel density estimate
-  densest=kde(x = X,H=H.fact*H,gridsize = gridpoints,xmin = mingrid,xmax = maxgrid,compute.cont = plot.contour)
+  densest <- kde(x = X,H=H.fact*H,gridsize = gridpoints,xmin = mingrid,xmax = maxgrid,compute.cont = plot.contour)
   
   # value at the mode of the kde
-  md=max(densest$estimate)
+  md <- max(densest$estimate)
   # index of the mode
-  indM=which(densest$estimate == md, arr.ind = TRUE)
+  indM <- which(densest$estimate == md, arr.ind = TRUE)
   # location (on the data scale) of the mode
-  M=rep(NA,2)
+  M <- rep(NA,2)
   for(i in 1:2){
-    M[i]=(densest$eval.points[[i]])[indM[i]]
+    M[i] <- (densest$eval.points[[i]])[indM[i]]
   }
-  indD=c()
+  indD <- c()
   
-  step=c(densest$eval.points[[1]][2]-densest$eval.points[[1]][1],densest$eval.points[[2]][2]-densest$eval.points[[2]][1])
-  eval.points=list()
-  dens=densest$estimate
+  step <- c(densest$eval.points[[1]][2]-densest$eval.points[[1]][1],densest$eval.points[[2]][2]-densest$eval.points[[2]][1])
+  eval.points <- list()
+  dens <- densest$estimate
   for(i in 1:2){
     if(indM[i]>(gridpoints[i]+1)/2){
-      eval.points[[i]]=c(densest$eval.points[[i]][1:indM[i]],seq(M[i]+step[i],M[i]+(indM[i]-1)*step[i],by=step[i]))
-      indD[i]="R"
+      eval.points[[i]] <- c(densest$eval.points[[i]][1:indM[i]],seq(M[i]+step[i],M[i]+(indM[i]-1)*step[i],by=step[i]))
+      indD[i] <- "R"
     } else if(indM[i]==(gridpoints[i]+1)/2){
-      eval.points[[i]]=densest$eval.points[[i]]
-      indD[i]="C"
+      eval.points[[i]] <- densest$eval.points[[i]]
+      indD[i] <- "C"
     } else {
-      eval.points[[i]]=c(seq(M[i]-(gridpoints[i]-indM[i])*step[i],M[i]-step[i],by=step[i]),densest$eval.points[[i]][indM[i]:gridpoints[i]])
-      indD[i]="L"
+      eval.points[[i]] <- c(seq(M[i]-(gridpoints[i]-indM[i])*step[i],M[i]-step[i],by=step[i]),densest$eval.points[[i]][indM[i]:gridpoints[i]])
+      indD[i] <- "L"
     }
   }
   
-  n=unlist(lapply(eval.points,length))
-  Odens=matrix(0,nrow=n[1],ncol=n[2])
+  n <- unlist(lapply(eval.points,length))
+  Odens <- matrix(0,nrow=n[1],ncol=n[2])
   if(indD[1]=="R"){
     if(indD[2]=="R"){
-      Odens[1:gridpoints[1],1:gridpoints[2]]=densest$estimate
+      Odens[1:gridpoints[1],1:gridpoints[2]] <- densest$estimate
     } else {
-      Odens[1:gridpoints[1],(n[2]-gridpoints[2]+1):n[2]]=densest$estimate
+      Odens[1:gridpoints[1],(n[2]-gridpoints[2]+1):n[2]] <- densest$estimate
     }
   } else {
     if(indD[2]=="R"){
-      Odens[(n[1]-gridpoints[1]+1):n[1],1:gridpoints[2]]=densest$estimate
+      Odens[(n[1]-gridpoints[1]+1):n[1],1:gridpoints[2]] <- densest$estimate
     } else {
-      Odens[(n[1]-gridpoints[1]+1):n[1],(n[2]-gridpoints[2]+1):n[2]]=densest$estimate
+      Odens[(n[1]-gridpoints[1]+1):n[1],(n[2]-gridpoints[2]+1):n[2]] <- densest$estimate
     }
   }
   
-  Mdens=rotR(rotR(Odens))
+  Mdens <- rotR(rotR(Odens))
   
   # calculate asymmetry measure on the extended grid
-  gamma=(Odens-Mdens)/md
+  gamma <- (Odens-Mdens)/md
   
   # value and index of maximum of gamma
-  valG=max(gamma)
-  indG=which(gamma == valG, arr.ind = TRUE)
+  valG <- max(gamma)
+  indG <- which(gamma == valG, arr.ind = TRUE)
   # location (on the data scale) of the mode
-  MD=rep(NA,2)
+  MD <- rep(NA,2)
   for(i in 1:2){
-    MD[i]=(eval.points[[i]])[indG[i]]
+    MD[i] <- (eval.points[[i]])[indG[i]]
   }
-  sum_measure=valG*(MD-M)/sqrt(sum((M-MD)^2))
+  sum_measure <- valG*(MD-M)/sqrt(sum((M-MD)^2))
   
   # plot contour of kde and asymmetry measure
   if(plot.contour==T){
