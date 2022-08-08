@@ -7,3 +7,6 @@ for visualizing the proposed asymmetry measure.
 Two functions are included for calculating and visualizing the asymmetry measure in a univariate and bivariate context using kernel density estimation
 
 #### Required packages are:
+"ks"
+"QBAsyDist"
+"plot3D"
